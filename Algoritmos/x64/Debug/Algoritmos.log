@@ -1,0 +1,6 @@
+﻿  Prueba.cpp
+c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(96): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(119): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(125): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  Algoritmos.vcxproj -> C:\Users\Miguel\Documents\Visual Studio 2015\Projects\Algoritmos\x64\Debug\Algoritmos.exe
+  Algoritmos.vcxproj -> C:\Users\Miguel\Documents\Visual Studio 2015\Projects\Algoritmos\x64\Debug\Algoritmos.pdb (Full PDB)
