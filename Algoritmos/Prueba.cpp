@@ -43,6 +43,30 @@ void getEachBGR(int opt, Mat& src) {
 
 
 }
+void resize(float factor, Mat& src) {
+
+	float tempVal;
+	int xr, yr;
+
+	//Obteniendo valores de factor de escala para no perder proporcionalidad.
+	if (src.cols == src.rows) {
+		xr = factor;
+		yr = factor;
+	}
+	else if (src.cols > src.rows) {
+		xr = factor;
+		tempVal = src.rows / (src.cols / factor);
+		yr = (int)round(tempVal);
+	}
+	else {
+		yr = factor;
+		tempVal = src.cols / (src.rows / factor);
+		yr = (int)round(tempVal);
+	}
+
+	//Se ocupa la funcion resize de opencv con el parametro INTER_AREA, el mas adecuado para reducir imagenes.
+	resize(src, src, Size(xr, yr), 0, 0, INTER_AREA);
+}
 
 void histograma(Mat im, int hist[])
 {
@@ -230,44 +254,44 @@ void eqHist(Mat& im) {
 	//return out;
 	im = out;
 }
-void medianFilter(int size, Mat& src) {
-	//Valores para  el manejo del kernel
-	int midValue = (size*size - 1) / 2;
-	int bounds = (size - 1) / 2;
-	vector<int> window(size*size);
+ void medianFilter(int size, Mat& src) {
+	 //Valores para  el manejo del kernel
+	 int midValue = (size*size - 1) / 2;
+	 int bounds = (size - 1) / 2;
+	 vector<int> window(size*size);
 
-	Mat dst;
-	dst = src.clone();
+	 Mat dst;
+	 dst = src.clone();
 
-	//Replicamos bordes para poder iterar toda la matriz
-	copyMakeBorder(src, src, bounds, bounds, bounds, bounds, BORDER_REPLICATE);
+	 //Replicamos bordes para poder iterar toda la matriz
+	 copyMakeBorder(src, src, bounds, bounds, bounds, bounds, BORDER_REPLICATE);
 
-	//Se itera para cada valor dentro de la matriz
-	//Se inicia desde el valor bounds para evitar valores basura fuera de la imagen de entrada src
-	for (int y = bounds; y < src.rows - bounds; y++) {
-		for (int x = bounds; x < src.cols - bounds; x++) {
-			// Para cada pixel x,y, se itera una submatriz de tamaño size*size que sera el kernel de trabajo
-			int p = 0;
-			for (int i = -bounds; i <= bounds; i++) {
-				for (int j = -bounds; j <= bounds; j++) {
-					//Se guarda cada valor i, j en el vector destinado al kernel
-					window[p] = src.at<uchar>(y + i, x + j);
-					p++;
-				}
-			}
+	 //Se itera para cada valor dentro de la matriz
+	 //Se inicia desde el valor bounds para evitar valores basura fuera de la imagen de entrada src
+	 for (int y = bounds; y < src.rows - bounds; y++) {
+		 for (int x = bounds; x < src.cols - bounds; x++) {
+			 // Para cada pixel x,y, se itera una submatriz de tamaño size*size que sera el kernel de trabajo
+			 int p = 0;
+			 for (int i = -bounds; i <= bounds; i++) {
+				 for (int j = -bounds; j <= bounds; j++) {
+					 //Se guarda cada valor i, j en el vector destinado al kernel
+					 window[p] = src.at<uchar>(y + i, x + j);
+					 p++;
+				 }
+			 }
 
-			//Se utiliza la funcion nth_element que obtiene el valor deseado de manera rapida, ordenando solo
-			//los elementos necesarios para obtener el valor deseado
-			nth_element(window.begin(), window.begin() + midValue, window.end());
-			//La matriz destino es llenada con el valor de mediana del kernel
-			dst.at<uchar>(y - bounds, x - bounds) = window[midValue];
-		}
-	}
-	//Se iguala con la matriz de entrada src
-	//src = src0;
-	src = dst;
+			 //Se utiliza la funcion nth_element que obtiene el valor deseado de manera rapida, ordenando solo
+			 //los elementos necesarios para obtener el valor deseado
+			 nth_element(window.begin(), window.begin() + midValue, window.end());
+			 //La matriz destino es llenada con el valor de mediana del kernel
+			 dst.at<uchar>(y - bounds, x - bounds) = window[midValue];
+		 }
+	 }
+	 //Se iguala con la matriz de entrada src
+	 //src = src0;
+	 src = dst;
 
-}
+ }
 void Tresh(Mat& src) {
 	int size = 3;
 
@@ -354,6 +378,32 @@ void thining(Mat& src) {
 
 
 }
+Mat restar(Mat m1, Mat m2) {
+	Mat result = m1.clone();
+	int tmp;
+	for (int y = 0; y < result.rows; y++) {
+		for (int x = 0; x < result.cols; x++) {
+			// Para cada pixel x,y, se itera una submatriz de tamaño size*size que sera el kernel de trabajo
+			tmp = m1.at<uchar>(y, x) - m2.at<uchar>(y, x);
+			tmp = 255 - tmp;
+			if (tmp < 0) {
+				result.at<uchar>(y, x) = 0;
+				cout << endl << tmp << endl;
+			}
+			else
+				result.at<uchar>(y, x) = tmp;
+		}
+	}
+
+	return result;
+}
+void estimation(Mat& src, int a, int b) {
+	Mat aux = src;
+	medianFilter(a,aux);
+	Mat ma=restar(src,aux);
+	medianFilter(b, ma);
+	src = ma;
+}
 int main(int, char** argv)
 {
 	// cargar imagen
@@ -364,7 +414,9 @@ int main(int, char** argv)
 	Mat kernel = (Mat_<int>(3, 3) << 1, 0, 1, 0, 1, 0, 1, 0, 1);
 	//cout << kernel.at<int>(0, 0);
 	clock_t time = clock();
+	
 	getEachBGR(GREEN, im);
+	resize(640, im);
 	namedWindow("I");
 	imshow("I", im);
 
@@ -372,9 +424,11 @@ int main(int, char** argv)
 	eqHist(im);
 	morfology(im, kernel, DILATACION);
 	morfology(im, kernel, EROSION);
-	Tresh(im);
-	//Thg(im, 215);
-	//mopen(im, kernel);
+	//medianFilter(30, im);
+	estimation(im, 40, 3);
+	//Tresh(im);
+	Thg(im, 215);
+	mopen(im, kernel);
 	cout << "tiempo" << (double)(clock() - time) / CLOCKS_PER_SEC;
 
 	namedWindow("Imagen");
