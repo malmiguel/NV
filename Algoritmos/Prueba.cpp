@@ -4,6 +4,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include<numeric>
+#include <math.h>
 
 using namespace std;
 using namespace cv;
@@ -13,6 +14,8 @@ using namespace cv;
 #define BLUE 0
 #define DILATACION 0
 #define EROSION 1
+#define OR 0
+#define AND 1
 #define A 1
 #define B 1
 /*void getEachBGR(int opt, Mat& src);
@@ -357,10 +360,10 @@ void Thg(Mat& im, int t) {
 	for (int y = 0; y < im.rows; y++) {
 		for (int x = 0; x < im.cols; x++) {
 			if (im.at<uchar>(y, x) > t) {
-				im.at<uchar>(y, x) = saturate_cast<uchar>(0);
+				im.at<uchar>(y, x) = saturate_cast<uchar>(255);
 			}
 			else {
-				im.at<uchar>(y, x) = saturate_cast<uchar>(255);
+				im.at<uchar>(y, x) = saturate_cast<uchar>(0);
 			}
 		}
 	}
@@ -372,12 +375,7 @@ void mopen(Mat& src, Mat ker) {
 	morfology(aux, ker, DILATACION);
 	src = aux;
 }
-void thining(Mat& src) {
-	Mat kernel = (Mat_<int>(3, 3) << 1, 0, 1, 0, 1, 0, 1, 0, 1);
-	morfology(src, kernel, EROSION);
 
-
-}
 Mat restar(Mat m1, Mat m2) {
 	Mat result = m1.clone();
 	int tmp;
@@ -397,6 +395,49 @@ Mat restar(Mat m1, Mat m2) {
 
 	return result;
 }
+Mat restb(Mat m1, Mat m2) {
+	Mat out = m1.clone();
+	int sal = 0;
+	for (int y = 0; y < m1.rows; y++) {
+		for (int x = 0; x < m1.cols; x++) {
+			sal = m1.at<uchar>(y, x) - m2.at<uchar>(y, x);
+			if (sal < 0) {
+				sal = 0;
+			}			
+				out.at<uchar>(y, x) = saturate_cast<uchar>(sal);
+				//cout << sal<<endl;
+			
+			
+			
+		}
+	}
+	return out;
+}
+Mat logic(Mat m1, Mat m2, int type) {
+	Mat out = m1.clone();
+	for (int y = 0; y < m1.rows; y++) {
+		for (int x = 0; x < m1.cols; x++) {
+			//cout << x << "," << y << endl;
+			if (type == OR) {
+				if (m1.at<uchar>(y, x) == 255 || m2.at<uchar>(y, x) == 255) {
+					out.at<uchar>(y, x) = saturate_cast<uchar>(255);
+				}
+				else {
+					out.at<uchar>(y, x) = saturate_cast<uchar>(0);
+				}
+			}
+			else {
+				if (m1.at<uchar>(y, x) == 255 && m2.at<uchar>(y, x) == 255) {
+					out.at<uchar>(y, x) = saturate_cast<uchar>(255);
+				}
+				else {
+					out.at<uchar>(y, x) = saturate_cast<uchar>(0);
+				}
+			}
+		}
+	}
+	return out;
+}
 void estimation(Mat& src, int a, int b) {
 	Mat aux = src;
 	medianFilter(a,aux);
@@ -404,40 +445,94 @@ void estimation(Mat& src, int a, int b) {
 	medianFilter(b, ma);
 	src = ma;
 }
+void derivativeFilter(Mat & im) {
+	Mat out = im.clone();
+	int pixel=0;
+	int i1, i2, i3, i4, i5, i6, i7, i8, i9;
+	for (int y = 0; y < im.rows; y++) {
+		for (int x = 0; x < im.cols; x++) {
+			//cout << x << "," << y << endl;
+			if (x == 0 || y == 0 || x == im.cols - 1 || y == im.rows - 1) {
+				out.at<uchar>(y, x) = saturate_cast<uchar>(im.at<uchar>(y, x));
+			}
+			else {
+				i1 = im.at<uchar>(y - 1, x - 1);
+				i2 = im.at<uchar>(y - 1, x);
+				i3 = im.at<uchar>(y - 1, x + 1);
+				i4 = im.at<uchar>(y , x - 1);
+				i5 = im.at<uchar>(y, x);
+				i6 = im.at<uchar>(y, x + 1);
+				i7 = im.at<uchar>(y + 1, x - 1);
+				i8 = im.at<uchar>(y + 1, x);
+				i9= im.at<uchar>(y + 1, x + 1);
+				pixel=abs((i7+i8+i9)-(i1+i2+i3))+abs((i3+i6+i9)-(i1+i4+i7));
+				out.at<uchar>(y,x)= saturate_cast<uchar>(pixel);
+
+			}
+		}
+	}
+	im = out;
+}
+void thining(Mat& src, Mat ker) {
+	Mat a = src;
+	Mat b = src;
+	Mat c;
+	Mat kernel = ker;
+	morfology(a, kernel, EROSION);
+	morfology(b, kernel, DILATACION);
+	//cv::subtract(a, b, c);
+	//cv:subtract(src, c, src);
+	Mat cr = restb(a,b);
+	src = restb(src,cr);
+	Thg(src, 190);
+
+}
+void spur(Mat& src, Mat ker) {
+	Mat x1 = src;
+	Mat x3 = src;
+	Mat a = src;
+	Mat b = src;
+	Mat kernelaux = (Mat_<int>(3, 3) << 0, 0, 0, 1, 1, 1, 0, 0, 0);
+	Mat kernelaux1 = (Mat_<int>(3, 3) << 1, 1, 1, 1, 1, 1, 1, 1, 1);
+	thining(x1, kernelaux);
+	thining(x1, kernelaux);
+	thining(x1, kernelaux);
+	//Thg(x1, 195);
+	src = logic(x1, x3, OR);
+	src = x1;
+
+}
 int main(int, char** argv)
 {
 	// cargar imagen
 	Mat im = imread(argv[1], 1);
-
-
-
 	Mat kernel = (Mat_<int>(3, 3) << 1, 0, 1, 0, 1, 0, 1, 0, 1);
 	//cout << kernel.at<int>(0, 0);
 	clock_t time = clock();
-	
 	getEachBGR(GREEN, im);
-	resize(640, im);
+	//resize(640, im);
 	namedWindow("I");
 	imshow("I", im);
 
 	//medianFilter(7, im);
+	//eqHist(im);
+	derivativeFilter(im);
 	eqHist(im);
 	morfology(im, kernel, DILATACION);
 	morfology(im, kernel, EROSION);
 	//medianFilter(30, im);
-	estimation(im, 40, 3);
+	//estimation(im, 40, 3);
 	//Tresh(im);
-	Thg(im, 215);
+	Thg(im, 195);
 	mopen(im, kernel);
+	spur(im, kernel);
+	thining(im, kernel);
+	
 	cout << "tiempo" << (double)(clock() - time) / CLOCKS_PER_SEC;
-
 	namedWindow("Imagen");
 	imshow("Imagen", im);
 	//Mat out;
 	//cv::subtract(im, im, out);
-
-
-
 
 	waitKey();
 	return 0;

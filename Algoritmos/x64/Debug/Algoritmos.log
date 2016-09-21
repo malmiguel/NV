@@ -1,10 +1,10 @@
 ﻿  Prueba.cpp
-c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(53): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(54): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(56): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
 c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(57): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(62): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(120): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(143): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(149): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(60): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(65): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(123): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(146): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\miguel\documents\visual studio 2015\projects\algoritmos\algoritmos\prueba.cpp(152): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Algoritmos.vcxproj -> C:\Users\Miguel\Documents\Visual Studio 2015\Projects\Algoritmos\x64\Debug\Algoritmos.exe
   Algoritmos.vcxproj -> C:\Users\Miguel\Documents\Visual Studio 2015\Projects\Algoritmos\x64\Debug\Algoritmos.pdb (Full PDB)
