@@ -16,6 +16,7 @@ using namespace cv;
 #define EROSION 1
 #define OR 0
 #define AND 1
+#define NOT 2
 #define A 1
 #define B 1
 /*void getEachBGR(int opt, Mat& src);
@@ -426,12 +427,20 @@ Mat logic(Mat m1, Mat m2, int type) {
 					out.at<uchar>(y, x) = saturate_cast<uchar>(0);
 				}
 			}
-			else {
+			if (type==AND) {
 				if (m1.at<uchar>(y, x) == 255 && m2.at<uchar>(y, x) == 255) {
 					out.at<uchar>(y, x) = saturate_cast<uchar>(255);
 				}
 				else {
 					out.at<uchar>(y, x) = saturate_cast<uchar>(0);
+				}
+			}
+			if (type == NOT) {
+				if (m1.at<uchar>(y, x) == 255) {
+					out.at<uchar>(y, x) = saturate_cast<uchar>(0);
+				}
+				else {
+					out.at<uchar>(y, x) = saturate_cast<uchar>(255);
 				}
 			}
 		}
