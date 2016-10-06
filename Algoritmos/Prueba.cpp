@@ -361,10 +361,10 @@ void Thg(Mat& im, int t) {
 	for (int y = 0; y < im.rows; y++) {
 		for (int x = 0; x < im.cols; x++) {
 			if (im.at<uchar>(y, x) > t) {
-				im.at<uchar>(y, x) = saturate_cast<uchar>(255);
+				im.at<uchar>(y, x) = saturate_cast<uchar>(0);
 			}
 			else {
-				im.at<uchar>(y, x) = saturate_cast<uchar>(0);
+				im.at<uchar>(y, x) = saturate_cast<uchar>(255);
 			}
 		}
 	}
@@ -513,26 +513,38 @@ void spur(Mat& src, Mat ker) {
 }
 int main(int, char** argv)
 {
+	vector<int> compression_params;
+	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+	compression_params.push_back(100);
 	// cargar imagen
 	Mat im = imread(argv[1], 1);
 	Mat kernel = (Mat_<int>(3, 3) << 1, 0, 1, 0, 1, 0, 1, 0, 1);
 	//cout << kernel.at<int>(0, 0);
 	clock_t time = clock();
 	getEachBGR(GREEN, im);
+	imwrite("grayscale.png", im, compression_params);
 	//resize(640, im);
 	namedWindow("I");
 	imshow("I", im);
 
 	//medianFilter(7, im);
 	//eqHist(im);
-	derivativeFilter(im);
-	eqHist(im);
+	//derivativeFilter(im);
+	//imwrite("derivate.png", im, compression_params);
+	//eqHist(im);
+	cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
+	clahe->setClipLimit(4);
+	clahe->apply(im, im);
+	imwrite("hist.png", im, compression_params);
 	morfology(im, kernel, DILATACION);
+	imwrite("dilatation.png", im, compression_params);
 	morfology(im, kernel, EROSION);
+	imwrite("erosion.png", im, compression_params);
 	//medianFilter(30, im);
 	//estimation(im, 40, 3);
 	//Tresh(im);
 	Thg(im, 195);
+	imwrite("escalado.png", im, compression_params);
 	mopen(im, kernel);
 	spur(im, kernel);
 	thining(im, kernel);
