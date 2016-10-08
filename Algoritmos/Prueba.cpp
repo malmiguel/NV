@@ -5,6 +5,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include<numeric>
 #include <math.h>
+#include<vector>
 
 using namespace std;
 using namespace cv;
@@ -87,8 +88,7 @@ void histograma(Mat im, int hist[])
 
 }
 
-void cumhist(int hist[], int cumhist[])
-{
+void cumhist(int hist[], int cumhist[]){
 	cumhist[0] = hist[0];
 
 	for (int i = 1; i < 256; i++)
@@ -97,52 +97,12 @@ void cumhist(int hist[], int cumhist[])
 	}
 }
 
-void histDisplay(int histogram[], const char* name)
-{
-	int hist[256];
-	for (int i = 0; i < 256; i++)
-	{
-		hist[i] = histogram[i];
-	}
-	// dibular el histograma
-	int hist_w = 512; int hist_h = 400;
-	int bin_w = cvRound((double)hist_w / 256);
-
-	Mat histImage(hist_h, hist_w, CV_8UC1, Scalar(255, 255, 255));
-
-	// encontrar el maximo nivel
-	int max = hist[0];
-	for (int i = 1; i < 256; i++) {
-		if (max < hist[i]) {
-			max = hist[i];
-		}
-	}
-
-	// normlizar el histograma
-
-	for (int i = 0; i < 256; i++) {
-		hist[i] = ((double)hist[i] / max)*histImage.rows;
-	}
-
-
-	// dibujar las intensidades
-	for (int i = 0; i < 256; i++)
-	{
-		line(histImage, Point(bin_w*(i), hist_h),
-			Point(bin_w*(i), hist_h - hist[i]),
-			Scalar(0, 0, 0), 1, 8, 0);
-	}
-
-	// mostrar
-	namedWindow(name, CV_WINDOW_AUTOSIZE);
-	imshow(name, histImage);
-}
 void eqHist(Mat& im) {
 	// generar wl histograma
 	int hist[256];
 	histograma(im, hist);
 
-	// Calucular tamaño de la imagen
+	// Calucular tamaÃ±o de la imagen
 	int size = im.rows * im.cols;
 	float alpha = 255.0 / size;
 
@@ -259,43 +219,64 @@ void eqHist(Mat& im) {
 	im = out;
 }
  void medianFilter(int size, Mat& src) {
-	 //Valores para  el manejo del kernel
-	 int midValue = (size*size - 1) / 2;
-	 int bounds = (size - 1) / 2;
-	 vector<int> window(size*size);
+ 	//Valores para  el manejo del kernel
+ 	int midValue = (size*size-1)/2;
+	int bounds = (size-1)/2;
+        vector<int> window(size*size);
+ 
+ 	Mat dst;
+        dst = src.clone();
+        
+        //Replicamos bordes para poder iterar toda la matriz
+        copyMakeBorder( src, src, bounds, bounds, bounds, bounds, BORDER_REPLICATE );
+ 
+ 	//Se itera para cada valor dentro de la matriz
+ 	//Se inicia desde el valor bounds para evitar valores basura fuera de la imagen de entrada src
+        for(int y = bounds; y < src.rows-bounds; y++){
+            for(int x = bounds; x < src.cols-bounds; x++){
+                // Para cada pixel x,y, se itera una submatriz de tamaÃ±o size*size que sera el kernel de trabajo
+                int p = 0;
+                for(int i = -bounds; i <= bounds; i++) {
+                	for(int j = -bounds; j <= bounds; j++) {
+                		//Se guarda cada valor i, j en el vector destinado al kernel
+                		window[p] = src.at<uchar>(y+i, x+j);
+                		p++;		
+                	}
+                }
+ 
+ 		//Se utiliza la funcion nth_element que obtiene el valor deseado de manera rapida, ordenando solo
+ 		//los elementos necesarios para obtener el valor deseado
+                nth_element(window.begin(), window.begin()+midValue, window.end());
+                //La matriz destino es llenada con el valor de mediana del kernel
+                dst.at<uchar>(y-bounds,x-bounds) = window[midValue];
+            }
+        }
+        //Se iguala con la matriz de entrada src
+        //src = src0;
+        src = dst;
+	
+}
+void estimation(Mat &src, int s, int f) {
 
-	 Mat dst;
-	 dst = src.clone();
+	vector<int> compression_params;
+	compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+	compression_params.push_back(100);
 
-	 //Replicamos bordes para poder iterar toda la matriz
-	 copyMakeBorder(src, src, bounds, bounds, bounds, bounds, BORDER_REPLICATE);
-
-	 //Se itera para cada valor dentro de la matriz
-	 //Se inicia desde el valor bounds para evitar valores basura fuera de la imagen de entrada src
-	 for (int y = bounds; y < src.rows - bounds; y++) {
-		 for (int x = bounds; x < src.cols - bounds; x++) {
-			 // Para cada pixel x,y, se itera una submatriz de tamaño size*size que sera el kernel de trabajo
-			 int p = 0;
-			 for (int i = -bounds; i <= bounds; i++) {
-				 for (int j = -bounds; j <= bounds; j++) {
-					 //Se guarda cada valor i, j en el vector destinado al kernel
-					 window[p] = src.at<uchar>(y + i, x + j);
-					 p++;
-				 }
-			 }
-
-			 //Se utiliza la funcion nth_element que obtiene el valor deseado de manera rapida, ordenando solo
-			 //los elementos necesarios para obtener el valor deseado
-			 nth_element(window.begin(), window.begin() + midValue, window.end());
-			 //La matriz destino es llenada con el valor de mediana del kernel
-			 dst.at<uchar>(y - bounds, x - bounds) = window[midValue];
-		 }
-	 }
-	 //Se iguala con la matriz de entrada src
-	 //src = src0;
-	 src = dst;
-
- }
+	imwrite("source.png", src, compression_params);
+	Mat gray = src;
+	medianFilter(s, src);
+	imwrite("smooth.png", src, compression_params);
+	//sub(gray, src);
+	Mat tmp;
+	subtract(src, gray, tmp);
+	gray = tmp;
+	imwrite("subtract.png", gray, compression_params);
+	medianFilter(f, gray);
+	imwrite("filter.png", gray, compression_params);
+	
+	src = gray;
+		
+}
 void Tresh(Mat& src) {
 	int size = 3;
 
@@ -315,7 +296,7 @@ void Tresh(Mat& src) {
 	//Se inicia desde el valor bounds para evitar valores basura fuera de la imagen de entrada src
 	for (int y = bounds; y < src.rows - bounds; y++) {
 		for (int x = bounds; x < src.cols - bounds; x++) {
-			// Para cada pixel x,y, se itera una submatriz de tamaño size*size que sera el kernel de trabajo
+			// Para cada pixel x,y, se itera una submatriz de tamaÃ±o size*size que sera el kernel de trabajo
 			int p = 0;
 			for (int i = -bounds; i <= bounds; i++) {
 				for (int j = -bounds; j <= bounds; j++) {
@@ -361,10 +342,10 @@ void Thg(Mat& im, int t) {
 	for (int y = 0; y < im.rows; y++) {
 		for (int x = 0; x < im.cols; x++) {
 			if (im.at<uchar>(y, x) > t) {
-				im.at<uchar>(y, x) = saturate_cast<uchar>(0);
+				im.at<uchar>(y, x) = saturate_cast<uchar>(255);
 			}
 			else {
-				im.at<uchar>(y, x) = saturate_cast<uchar>(255);
+				im.at<uchar>(y, x) = saturate_cast<uchar>(0);
 			}
 		}
 	}
@@ -382,7 +363,7 @@ Mat restar(Mat m1, Mat m2) {
 	int tmp;
 	for (int y = 0; y < result.rows; y++) {
 		for (int x = 0; x < result.cols; x++) {
-			// Para cada pixel x,y, se itera una submatriz de tamaño size*size que sera el kernel de trabajo
+			// Para cada pixel x,y, se itera una submatriz de tamaÃ±o size*size que sera el kernel de trabajo
 			tmp = m1.at<uchar>(y, x) - m2.at<uchar>(y, x);
 			tmp = 255 - tmp;
 			if (tmp < 0) {
@@ -447,13 +428,7 @@ Mat logic(Mat m1, Mat m2, int type) {
 	}
 	return out;
 }
-void estimation(Mat& src, int a, int b) {
-	Mat aux = src;
-	medianFilter(a,aux);
-	Mat ma=restar(src,aux);
-	medianFilter(b, ma);
-	src = ma;
-}
+
 void derivativeFilter(Mat & im) {
 	Mat out = im.clone();
 	int pixel=0;
@@ -493,7 +468,10 @@ void thining(Mat& src, Mat ker) {
 	//cv:subtract(src, c, src);
 	Mat cr = restb(a,b);
 	src = restb(src,cr);
-	Thg(src, 190);
+
+}
+void hitormiss(Mat& src,Mat ker){
+
 
 }
 void spur(Mat& src, Mat ker) {
@@ -503,13 +481,37 @@ void spur(Mat& src, Mat ker) {
 	Mat b = src;
 	Mat kernelaux = (Mat_<int>(3, 3) << 0, 0, 0, 1, 1, 1, 0, 0, 0);
 	Mat kernelaux1 = (Mat_<int>(3, 3) << 1, 1, 1, 1, 1, 1, 1, 1, 1);
-	thining(x1, kernelaux);
-	thining(x1, kernelaux);
-	thining(x1, kernelaux);
-	//Thg(x1, 195);
-	src = logic(x1, x3, OR);
-	src = x1;
+	Mat kernelaux2 = (Mat_<int>(3, 3) << 0, 1, 0, 1, 1, 1, 0, 1, 0);
+	thining(x1, kernelaux2);
+	thining(x1, kernelaux2);
+	thining(x1, kernelaux2);
+	morfology(a,kernelaux2,DILATACION);
+	morfology(b,ker,EROSION);
+	x3=restb(b,a);
+	morfology(x3,kernelaux1,DILATACION);
+	morfology(x3,kernelaux1,DILATACION);
+	morfology(x3,kernelaux1,DILATACION);
+	src=logic(x1,x3,OR);
 
+}
+void skel(Mat& src,Mat element){
+	Mat skel(src.size(), CV_8UC1, cv::Scalar(0));
+	Mat temp;
+	Mat eroded=src;
+	//Mat element = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(3, 3));
+	int done=1;
+	do{
+		morfology(eroded,element,EROSION);
+		temp=eroded;
+		morfology(temp,element,DILATACION);
+		cv::subtract(src, temp, temp);
+  		cv::bitwise_or(skel, temp, skel);
+  		eroded.copyTo(src);
+		//done = (cv::countNonZero(src) == 0);
+		//if(countNonZero(src)>0){
+	
+	}while (countNonZero(src)>0);
+	src=skel;
 }
 int main(int, char** argv)
 {
@@ -524,14 +526,8 @@ int main(int, char** argv)
 	getEachBGR(GREEN, im);
 	imwrite("grayscale.png", im, compression_params);
 	//resize(640, im);
-	namedWindow("I");
-	imshow("I", im);
-
-	//medianFilter(7, im);
-	//eqHist(im);
-	//derivativeFilter(im);
-	//imwrite("derivate.png", im, compression_params);
-	//eqHist(im);
+	//namedWindow("I");
+	//imshow("I", im);
 	cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
 	clahe->setClipLimit(4);
 	clahe->apply(im, im);
@@ -540,18 +536,22 @@ int main(int, char** argv)
 	imwrite("dilatation.png", im, compression_params);
 	morfology(im, kernel, EROSION);
 	imwrite("erosion.png", im, compression_params);
-	//medianFilter(30, im);
-	//estimation(im, 40, 3);
-	//Tresh(im);
-	Thg(im, 195);
+	estimation(im,51,3);
+
+	Thg(im, 6);
 	imwrite("escalado.png", im, compression_params);
 	mopen(im, kernel);
+	imwrite("apertura.png", im, compression_params);
+	
 	spur(im, kernel);
-	thining(im, kernel);
+	imwrite("spur.png", im, compression_params);
+	skel(im,kernel);
+	imwrite("skel.png", im, compression_params);
+	//thining(im, kernel);
 	
 	cout << "tiempo" << (double)(clock() - time) / CLOCKS_PER_SEC;
-	namedWindow("Imagen");
-	imshow("Imagen", im);
+	//namedWindow("Imagen");
+	//imshow("Imagen", im);
 	//Mat out;
 	//cv::subtract(im, im, out);
 
