@@ -353,30 +353,12 @@ void Thg(Mat& im, int t) {
 
 void mopen(Mat& src, Mat ker) {
 	Mat aux = src;
-	morfology(aux, ker, EROSION);
 	morfology(aux, ker, DILATACION);
+	morfology(aux, ker, EROSION);
 	src = aux;
 }
 
-Mat restar(Mat m1, Mat m2) {
-	Mat result = m1.clone();
-	int tmp;
-	for (int y = 0; y < result.rows; y++) {
-		for (int x = 0; x < result.cols; x++) {
-			// Para cada pixel x,y, se itera una submatriz de tamaño size*size que sera el kernel de trabajo
-			tmp = m1.at<uchar>(y, x) - m2.at<uchar>(y, x);
-			tmp = 255 - tmp;
-			if (tmp < 0) {
-				result.at<uchar>(y, x) = 0;
-				cout << endl << tmp << endl;
-			}
-			else
-				result.at<uchar>(y, x) = tmp;
-		}
-	}
 
-	return result;
-}
 Mat restb(Mat m1, Mat m2) {
 	Mat out = m1.clone();
 	int sal = 0;
@@ -532,6 +514,7 @@ void gaussianFilter(Mat& src, int k_size) {
 	src = dst;
 
 }
+void hitormiss(Mat& src, Mat kernel) {}
 void thining(Mat& src, Mat ker) {
 	Mat a = src;
 	Mat b = src;
@@ -541,7 +524,7 @@ void thining(Mat& src, Mat ker) {
 	morfology(b, kernel, DILATACION);
 	//cv::subtract(a, b, c);
 	//cv:subtract(src, c, src);
-	Mat cr = restb(a,b);
+	Mat cr = a-b;
 	src = restb(src,cr);
 
 }
@@ -559,7 +542,7 @@ void spur(Mat& src, Mat ker) {
 	thining(x1, kernelaux2);
 	morfology(a,kernelaux2,DILATACION);
 	morfology(b,ker,EROSION);
-	x3=restb(b,a);
+	x3 = b-a;
 	morfology(x3,kernelaux1,DILATACION);
 	morfology(x3,kernelaux1,DILATACION);
 	morfology(x3,kernelaux1,DILATACION);
@@ -575,18 +558,7 @@ void skel(Mat& im){
 	Mat element = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(3, 3));
 	//bool done = true;
 	int i = 0;
-	/*while (done)
-	{
-		// eroding + dilating = opening
-		cv::erode(src, eroded, element);
-		cv::dilate(eroded, temp, element);
-		cv::subtract(src, temp, temp);
-		cv::bitwise_or(skeleton, temp, skeleton);
-		eroded.copyTo(src);
-		cout << cv::countNonZero(src) << endl;
-		done = (cv::countNonZero(src) == 0);
-		++i;
-	}*/
+
 	bool done;
 	do
 	{
@@ -610,7 +582,11 @@ int main(int, char** argv)
 	compression_params.push_back(100);
 	// cargar imagen
 	Mat im = imread(argv[1], 1);
-	Mat kernel = (Mat_<int>(3, 3) << 1, 0, 1, 0, 1, 0, 1, 0, 1);
+	Mat kernel = (Mat_<int>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
+	Mat kernelb = (Mat_<int>(3, 3) << 0, 0, 1, 0, 1, 0, 1, 0, 0);
+	Mat kernelc = (Mat_<int>(3, 3) << 0, 1, 0, 0, 1, 0, 0, 1, 0);
+	Mat kerneld = (Mat_<int>(3, 3) << 0, 0, 0, 1, 1, 1, 0, 0, 0);
+	Mat kernele = (Mat_<int>(3, 3) << 1, 0, 1, 0, 1, 0, 1, 0, 1);
 	Mat kernela = (Mat_<int>(3, 3) << 1,1 , 1, 1, 1, 1, 1, 1, 1);
 	int morph_size = 2;
 	//Mat kernela = getStructuringElement(MORPH_RECT, Size(2 * morph_size + 1, 2 * morph_size + 1), Point(morph_size, morph_size));
@@ -625,23 +601,31 @@ int main(int, char** argv)
 	clahe->setClipLimit(4);
 	clahe->apply(im, im);
 	imwrite("hist.png", im, compression_params);
-	morfology(im, kernel, DILATACION);
-
-	imwrite("dilatation.png", im, compression_params);
 	morfology(im, kernel, EROSION);
+	morfology(im, kernelb, EROSION);
+	morfology(im, kernelc, EROSION);
+	morfology(im, kerneld, EROSION);
+	imwrite("dilatation.png", im, compression_params);
+	morfology(im, kernele, DILATACION);
+	
 	imwrite("erosion.png", im, compression_params);
+	gaussianFilter(im, 3);
+	imwrite("gauss.png", im, compression_params);
 	estimation(im,51,3);
+	medianFilter(7, im);
 
-	Thg(im, 6);
+	Thg(im, 8);
 	imwrite("escalado.png", im, compression_params);
 	//kernel = np.ones((3, 3), np.uint8)
 	//morphologyEx(im, im, MORPH_OPEN, kernela);
-	mopen(im, kernela);
+	mopen(im, kernele);
+	//Mat element = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(3, 3));
+	//cv::morphologyEx(im, im, cv::MORPH_OPEN, element);
 	imwrite("apertura.png", im, compression_params);
 	//gaussianFilter(im, 9);
 	//imwrite("gauss.png", im, compression_params);
 	
-	spur(im, kernel);
+	spur(im, kernele);
 	imwrite("spur.png", im, compression_params);
 	skel(im);
 	imwrite("skel.png", im, compression_params);
@@ -651,8 +635,8 @@ int main(int, char** argv)
 	//imwrite("casifinal.png", im, compression_params);
 	//cv::subtract(im,el, im);
 	//im = el - im;
-	//spur(im, kernel);
-	//imwrite("final.png", im, compression_params);
+	thining(im, kernele);
+	imwrite("final.png", im, compression_params);
 	cout << "tiempo" << (double)(clock() - time) / CLOCKS_PER_SEC;
 	//namedWindow("Imagen");
 	//imshow("Imagen", im);
