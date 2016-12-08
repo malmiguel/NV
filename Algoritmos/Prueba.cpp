@@ -353,9 +353,17 @@ void Thg(Mat& im, int t) {
 
 void mopen(Mat& src, Mat ker) {
 	Mat aux = src;
+	morfology(aux, ker, EROSION);
+	morfology(aux, ker, DILATACION);
+	
+	src = aux;
+}
+void mclose(Mat& src, Mat ker) {
+	Mat aux = src;
 	morfology(aux, ker, DILATACION);
 	morfology(aux, ker, EROSION);
-	src = aux;
+	
+
 }
 
 
@@ -619,7 +627,7 @@ int main(int, char** argv)
 	//kernel = np.ones((3, 3), np.uint8)
 	//morphologyEx(im, im, MORPH_OPEN, kernela);
 	mopen(im, kernele);
-	//Mat element = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(3, 3));
+	Mat element = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(3, 3));
 	//cv::morphologyEx(im, im, cv::MORPH_OPEN, element);
 	imwrite("apertura.png", im, compression_params);
 	//gaussianFilter(im, 9);
@@ -627,6 +635,8 @@ int main(int, char** argv)
 	
 	spur(im, kernele);
 	imwrite("spur.png", im, compression_params);
+	//::morphologyEx(im, im, cv::MORPH_CLOSE, element);
+	//	imwrite("close.png", im, compression_params);
 	skel(im);
 	imwrite("skel.png", im, compression_params);
 	//Mat el = im.clone();
