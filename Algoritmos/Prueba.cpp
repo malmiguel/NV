@@ -162,11 +162,8 @@ void eqHist(Mat& im) {
 }
  void morfology(Mat& im, Mat ker, int type) {
 	int size = ker.rows / 2;
-	//cout << im.cols << "," << im.rows << endl;
-	//cout << im.cols + size << "," << im.rows +size << endl;
 	Mat out = im.clone();
-	//Mat aux;
-	//copyMakeBorder(im, aux, size, size, size, size, BORDER_REPLICATE);
+
 	vector<int> lista;
 	int max = 0;
 	int min = 255;
@@ -365,8 +362,6 @@ void mclose(Mat& src, Mat ker) {
 	
 
 }
-
-
 Mat restb(Mat m1, Mat m2) {
 	Mat out = m1.clone();
 	int sal = 0;
@@ -522,7 +517,7 @@ void gaussianFilter(Mat& src, int k_size) {
 	src = dst;
 
 }
-void hitormiss(Mat& src, Mat kernel) {}
+
 void thining(Mat& src, Mat ker) {
 	Mat a = src;
 	Mat b = src;
@@ -583,6 +578,57 @@ void skel(Mat& im){
 	} while (!done);
 	im=skeleton;
 }
+void inter(Mat &im) {
+	Mat out = im.clone();
+	int x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x14, x15, x16, x17, x18,x19,x20,x21,x22,x23,x24,x25;
+		for (int y = 0; y < im.rows; y++) {
+			for (int x = 0; x < im.cols; x++) {
+				//cout << x << "," << y << endl;
+				if (x < 3 || y < 3 || x > im.cols - 3 || y > im.rows - 3) {
+					out.at<uchar>(y, x) = saturate_cast<uchar>(im.at<uchar>(y, x));
+				}
+				else {
+					x1 = im.at<uchar>(y - 2, x - 2);
+					x3 = im.at<uchar>(y - 2, x);
+					x5 = im.at<uchar>(y - 2, x + 2);
+					x7= im.at<uchar>(y - 1, x -1);
+					x8= im.at<uchar>(y - 1, x);
+					x9= im.at<uchar>(y - 1, x + 1);
+					x11 = im.at<uchar>(y, x - 2);
+					x12= im.at<uchar>(y, x-1);
+					x14= im.at<uchar>(y, x + 1);
+					x15 = im.at<uchar>(y, x + 2);
+					x17= im.at<uchar>(y + 1, x -1);
+					x18= im.at<uchar>(y + 1, x);
+					x19= im.at<uchar>(y + 1, x + 1);
+					x21 = im.at<uchar>(y + 2, x - 2);
+					x23 = im.at<uchar>(y + 2, x);
+					x25 = im.at<uchar>(y + 2, x + 2);
+					if ((1 == 255 && x25 == 255)||( x3 == 255 && x23 == 255 )|| (x5 == 255 && x21 == 255) || (x7==255 && x19==255) ||(x8==255 && x18==255) || (x9==255 && x17==255) || (x1==255 && x7==255)|| (x19==255 && x25==255) ||(x9==255 && x5==255) || (x17 == 255 && x21 == 255) || (x3 == 255 && x8 == 255) || (x18 == 255 && x23 == 255)) {
+						out.at<uchar>(y, x) = saturate_cast<uchar>(255);
+					
+					}
+					else {
+						out.at<uchar>(y, x) = saturate_cast<uchar>(im.at<uchar>(y, x));
+					}
+
+
+				}
+			}
+		}
+
+		im = out;
+
+}
+void window(Mat im) {
+	int x = im.cols;
+	int y = im.rows;
+	float p = x / 100;
+	float k = y / 100;
+	cout << "x= " << x << endl << "y =" << y << endl << "p= " << p << endl << "k= " << k;
+
+}
+
 int main(int, char** argv)
 {
 	vector<int> compression_params;
@@ -605,7 +651,7 @@ int main(int, char** argv)
 	//resize(640, im);
 	//namedWindow("I");
 	//imshow("I", im);
-	cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
+	/*cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
 	clahe->setClipLimit(4);
 	clahe->apply(im, im);
 	imwrite("hist.png", im, compression_params);
@@ -620,33 +666,56 @@ int main(int, char** argv)
 	gaussianFilter(im, 3);
 	imwrite("gauss.png", im, compression_params);
 	estimation(im,51,3);
+
 	medianFilter(7, im);
+	imwrite("mediana.png", im, compression_params);
+
 
 	Thg(im, 8);
+	
 	imwrite("escalado.png", im, compression_params);
 	//kernel = np.ones((3, 3), np.uint8)
 	//morphologyEx(im, im, MORPH_OPEN, kernela);
 	mopen(im, kernele);
-	Mat element = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(3, 3));
+	//Mat element = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(3, 3));
 	//cv::morphologyEx(im, im, cv::MORPH_OPEN, element);
 	imwrite("apertura.png", im, compression_params);
 	//gaussianFilter(im, 9);
 	//imwrite("gauss.png", im, compression_params);
 	
+	
+	
 	spur(im, kernele);
 	imwrite("spur.png", im, compression_params);
 	//::morphologyEx(im, im, cv::MORPH_CLOSE, element);
 	//	imwrite("close.png", im, compression_params);
+	inter(im);
+	inter(im);
+	inter(im);
+
+	imwrite("inter.png", im, compression_params);
 	skel(im);
 	imwrite("skel.png", im, compression_params);
+	inter(im);
+	inter(im);
+
+	imwrite("inter2.png", im, compression_params);
 	//Mat el = im.clone();
+	skel(im);
+	imwrite("skel2.png", im, compression_params);*/
 	
 	//mopen(im, kernela);
 	//imwrite("casifinal.png", im, compression_params);
 	//cv::subtract(im,el, im);
 	//im = el - im;
-	thining(im, kernele);
-	imwrite("final.png", im, compression_params);
+	//thining(im, kernele);
+
+	//resize(im, im, im.size(), 0, 0, INTER_NEAREST);
+	//resize(im, im, im.size(), 0, 0, INTER_AREA);
+	
+	window(im);
+	
+	
 	cout << "tiempo" << (double)(clock() - time) / CLOCKS_PER_SEC;
 	//namedWindow("Imagen");
 	//imshow("Imagen", im);

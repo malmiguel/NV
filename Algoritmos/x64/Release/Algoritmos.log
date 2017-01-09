@@ -5,13 +5,23 @@ Prueba.cpp(62): warning C4244: '=': conversion from 'float' to 'int', possible l
 Prueba.cpp(67): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
 Prueba.cpp(107): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
 Prueba.cpp(113): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-Prueba.cpp(471): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-Prueba.cpp(480): warning C4244: '/=': conversion from 'double' to 'float', possible loss of data
-Prueba.cpp(511): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+Prueba.cpp(466): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+Prueba.cpp(475): warning C4244: '/=': conversion from 'double' to 'float', possible loss of data
+Prueba.cpp(506): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+Prueba.cpp(583): warning C4101: 'x20': unreferenced local variable
+Prueba.cpp(583): warning C4101: 'x4': unreferenced local variable
+Prueba.cpp(583): warning C4101: 'x24': unreferenced local variable
+Prueba.cpp(583): warning C4101: 'x16': unreferenced local variable
+Prueba.cpp(583): warning C4101: 'x22': unreferenced local variable
+Prueba.cpp(583): warning C4101: 'x6': unreferenced local variable
+Prueba.cpp(583): warning C4101: 'x10': unreferenced local variable
+Prueba.cpp(583): warning C4101: 'x2': unreferenced local variable
+Prueba.cpp(626): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+Prueba.cpp(627): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
   Generating code
-  8 of 226 functions ( 3.5%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    3 functions had inline decision re-evaluated but remain unchanged
+  11 of 156 functions ( 7.1%) were compiled, the rest were copied from previous compilation.
+    2 functions were new in current compilation
+    11 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Algoritmos.vcxproj -> C:\Users\Miguel\Documents\Visual Studio 2015\Projects\Algoritmos\x64\Release\Algoritmos.exe
   Algoritmos.vcxproj -> C:\Users\Miguel\Documents\Visual Studio 2015\Projects\Algoritmos\x64\Release\Algoritmos.pdb (Full PDB)
